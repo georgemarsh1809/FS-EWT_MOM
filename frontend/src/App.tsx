@@ -12,6 +12,7 @@ import {
 } from "recharts";
 
 import "./App.css";
+import { currentVolumes } from "./defaults/currentVolumes";
 import { useScenarioStore } from "./store/useScenarioStore";
 import type { ScenarioTypeResult, WorkType } from "./types";
 
@@ -46,10 +47,14 @@ function App() {
     lockTotalOut,
     results,
     loading,
+    optimiseRunning,
+    optimiseProgress,
     error,
     setLockTotalIn,
     setLockTotalOut,
     updatePallets,
+    resetInputs,
+    optimiseInputs,
     fetchRates,
     runScenario
   } = useScenarioStore();
@@ -93,6 +98,16 @@ function App() {
     name: titleCase(type),
     value: results?.per_type[type].total_margin ?? 0
   }));
+
+  const hasInputChanges = useMemo(
+    () =>
+      WORK_TYPES.some(
+        (type) =>
+          inputs[type].pallets_in !== currentVolumes[type].pallets_in ||
+          inputs[type].pallets_out !== currentVolumes[type].pallets_out
+      ),
+    [inputs]
+  );
 
   return (
     <div className="page">
@@ -196,9 +211,48 @@ function App() {
       </section>
 
       <section className="controls">
-        <div className="section-title">
-          <h2>Volume controls</h2>
-          <p>Set pallets IN and OUT per work type. Integer-only, per-pallet margins stay fixed.</p>
+        <div className="controls-heading">
+          <div className="section-title">
+            <h2>Volume controls</h2>
+            <p>Set pallets IN and OUT per work type. Integer-only, per-pallet margins stay fixed.</p>
+            {optimiseRunning && (
+              <div className="optimise-status">
+                <p className="status">Optimising… {Math.round(optimiseProgress * 100)}%</p>
+                <div className="progress-track" role="progressbar" aria-valuenow={Math.round(optimiseProgress * 100)} aria-valuemin={0} aria-valuemax={100}>
+                  <span className="progress-fill" style={{ width: `${Math.round(optimiseProgress * 100)}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="controls-actions">
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => {
+                setLockTotalIn(true);
+                setLockTotalOut(true);
+              }}
+              disabled={lockTotalIn && lockTotalOut}
+            >
+              Use current pallet totals (IN & OUT)
+            </button>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={optimiseInputs}
+              disabled={!rates || loading || optimiseRunning}
+            >
+              Optimise for margin %
+            </button>
+            <button
+              type="button"
+              className="reset-button"
+              onClick={resetInputs}
+              disabled={!hasInputChanges}
+            >
+              Reset to defaults
+            </button>
+          </div>
         </div>
         <div className="controls-grid">
           {WORK_TYPES.map((type) => (

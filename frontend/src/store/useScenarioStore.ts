@@ -66,23 +66,46 @@ export type ScenarioState = {
   lockTotalOut: boolean;
   results: ScenarioRunResponse | null;
   loading: boolean;
+  optimiseRunning: boolean;
+  optimiseProgress: number;
   error: string | null;
   setScopeId: (scopeId: string) => void;
   setLockTotalIn: (value: boolean) => void;
   setLockTotalOut: (value: boolean) => void;
   updatePallets: (type: WorkType, field: "pallets_in" | "pallets_out", value: number) => void;
+  resetInputs: () => void;
+  optimiseInputs: () => Promise<void>;
   fetchRates: (scopeId: string) => Promise<void>;
   runScenario: () => Promise<void>;
+};
+
+const getDefaultInputs = (): Record<WorkType, ScenarioInputs> =>
+  WORK_TYPES.reduce((acc, type) => {
+    acc[type] = { ...currentVolumes[type] };
+    return acc;
+  }, {} as Record<WorkType, ScenarioInputs>);
+
+const sumBy = (inputs: Record<WorkType, ScenarioInputs>, field: "pallets_in" | "pallets_out") =>
+  WORK_TYPES.reduce((sum, type) => sum + inputs[type][field], 0);
+
+const getStepSize = (totalIn: number, totalOut: number) => {
+  const base = Math.max(totalIn, totalOut);
+  if (base <= 1000) {
+    return 50;
+  }
+  return Math.max(100, Math.round(base / 400));
 };
 
 export const useScenarioStore = create<ScenarioState>((set, get) => ({
   scopeId: "p1_p9_avg",
   rates: null,
-  inputs: currentVolumes,
+  inputs: getDefaultInputs(),
   lockTotalIn: true,
   lockTotalOut: true,
   results: null,
   loading: false,
+  optimiseRunning: false,
+  optimiseProgress: 0,
   error: null,
   setScopeId: (scopeId) => set({ scopeId }),
   setLockTotalIn: (value) => set({ lockTotalIn: value }),
@@ -122,6 +145,154 @@ export const useScenarioStore = create<ScenarioState>((set, get) => ({
       }
     }
     set({ inputs: nextInputs });
+  },
+  resetInputs: () => set({ inputs: getDefaultInputs() }),
+  optimiseInputs: async () => {
+    const { rates, inputs } = get();
+    if (!rates) {
+      set({ error: "Load rates before running optimisation.", optimiseRunning: false, optimiseProgress: 0 });
+      return;
+    }
+
+    set({ optimiseRunning: true, optimiseProgress: 0, error: null });
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => resolve());
+    });
+
+    const totalIn = sumBy(inputs, "pallets_in");
+    const totalOut = sumBy(inputs, "pallets_out");
+
+    if (totalIn === 0 && totalOut === 0) {
+      set({ error: "Totals are zero. Add volume before optimising.", optimiseRunning: false, optimiseProgress: 0 });
+      return;
+    }
+
+    const minTotalOut = Math.ceil(totalIn * 0.9);
+    const maxTotalOut = Math.floor(totalIn * 1.1);
+    if (totalOut < minTotalOut || totalOut > maxTotalOut) {
+      set({
+        error:
+          "No feasible solution: total OUT must be within ±10% of total IN to satisfy per-type constraints.",
+        optimiseRunning: false,
+        optimiseProgress: 0
+      });
+      return;
+    }
+
+    const step = getStepSize(totalIn, totalOut);
+    const types = WORK_TYPES;
+    const [typeA, typeB, typeC] = types;
+
+    const currentDistance = (candidate: Record<WorkType, ScenarioInputs>) =>
+      types.reduce((sum, type) => {
+        const dIn = candidate[type].pallets_in - inputs[type].pallets_in;
+        const dOut = candidate[type].pallets_out - inputs[type].pallets_out;
+        return sum + dIn * dIn + dOut * dOut;
+      }, 0);
+
+    let best: { inputs: Record<WorkType, ScenarioInputs>; marginPct: number; distance: number } | null = null;
+    let processedPairs = 0;
+    const totalPairs =
+      Math.floor(totalIn / step) + 1 > 0
+        ? Array.from({ length: Math.floor(totalIn / step) + 1 }).reduce((sum, _, index) => {
+            const inA = index * step;
+            const remaining = totalIn - inA;
+            return sum + (Math.floor(remaining / step) + 1);
+          }, 0)
+        : 0;
+    let lastProgressTime = performance.now();
+    let lastYieldTime = lastProgressTime;
+    let rafPending = false;
+    const updateProgress = (progress: number) => {
+      if (rafPending) {
+        return;
+      }
+      rafPending = true;
+      window.requestAnimationFrame(() => {
+        set({ optimiseProgress: Math.min(1, progress) });
+        rafPending = false;
+      });
+    };
+
+    for (let inA = 0; inA <= totalIn; inA += step) {
+      for (let inB = 0; inB <= totalIn - inA; inB += step) {
+        const inC = totalIn - inA - inB;
+
+        const minOutA = Math.ceil(inA * 0.9);
+        const maxOutA = Math.floor(inA * 1.1);
+        const minOutB = Math.ceil(inB * 0.9);
+        const maxOutB = Math.floor(inB * 1.1);
+        const minOutC = Math.ceil(inC * 0.9);
+        const maxOutC = Math.floor(inC * 1.1);
+
+        const minOutSum = minOutA + minOutB + minOutC;
+        const maxOutSum = maxOutA + maxOutB + maxOutC;
+        if (totalOut < minOutSum || totalOut > maxOutSum) {
+          continue;
+        }
+
+        for (let outA = minOutA; outA <= maxOutA; outA += step) {
+          for (let outB = minOutB; outB <= maxOutB; outB += step) {
+            const outC = totalOut - outA - outB;
+            if (outC < minOutC || outC > maxOutC) {
+              continue;
+            }
+
+            const candidate: Record<WorkType, ScenarioInputs> = {
+              [typeA]: { pallets_in: inA, pallets_out: outA },
+              [typeB]: { pallets_in: inB, pallets_out: outB },
+              [typeC]: { pallets_in: inC, pallets_out: outC }
+            };
+
+            let totalRevenue = 0;
+            let totalCost = 0;
+            for (const type of types) {
+              const rate = rates.types[type];
+              const inValue = candidate[type].pallets_in;
+              const outValue = candidate[type].pallets_out;
+              totalRevenue += inValue * rate.wh_rev_per_in_pallet + outValue * rate.trans_rev_per_out_pallet;
+              totalCost += inValue * rate.wh_cost_per_in_pallet + outValue * rate.trans_cost_per_out_pallet;
+            }
+            if (totalRevenue <= 0) {
+              continue;
+            }
+            const marginPct = (totalRevenue - totalCost) / totalRevenue;
+            const distance = currentDistance(candidate);
+
+            if (!best || marginPct > best.marginPct + 1e-9) {
+              best = { inputs: candidate, marginPct, distance };
+            } else if (Math.abs(marginPct - best.marginPct) <= 1e-9 && distance < best.distance) {
+              best = { inputs: candidate, marginPct, distance };
+            }
+          }
+        }
+
+        processedPairs += 1;
+        if (processedPairs % 200 === 0) {
+          const now = performance.now();
+          if (now - lastProgressTime > 80) {
+            const progress = totalPairs > 0 ? processedPairs / totalPairs : 0;
+            updateProgress(progress);
+            lastProgressTime = now;
+          }
+          if (now - lastYieldTime > 120) {
+            lastYieldTime = now;
+            await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+          }
+        }
+      }
+    }
+
+    if (!best) {
+      set({
+        error: "No feasible optimisation found with current totals and constraints.",
+        optimiseRunning: false,
+        optimiseProgress: 0
+      });
+      return;
+    }
+
+    set({ inputs: best.inputs, error: null, optimiseRunning: false, optimiseProgress: 1 });
   },
   fetchRates: async (scopeId: string) => {
     set({ loading: true, error: null });
