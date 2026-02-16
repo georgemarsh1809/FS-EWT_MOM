@@ -350,10 +350,64 @@ const SECTION_DEFS: Array<{
     },
 ];
 
-const DEFAULT_INPUTS: Inputs = FIELD_DEFS.reduce((acc, field) => {
+const EMPTY_INPUTS: Inputs = FIELD_DEFS.reduce((acc, field) => {
     acc[field.key] = '';
     return acc;
 }, {} as Inputs);
+
+const normaliseInputs = (parsed: Partial<Inputs> | null | undefined): Inputs => ({
+    ...EMPTY_INPUTS,
+    ...(parsed ?? {}),
+});
+
+const SEEDED_DEFAULT_INPUTS: Inputs = normaliseInputs({
+    consol_trans_rev: '1567258.69',
+    groupage_trans_rev: '1358788.61',
+    stock_trans_rev: '5159006.42',
+    consol_pallet_out: '25656.7',
+    groupage_pallet_out: '26555.4',
+    stock_pallet_out: '96094.4',
+    consol_df_in: '32429',
+    consol_pw_in: '6850',
+    groupage_df_in: '52546',
+    groupage_pw_in: '2382',
+    stock_in_total: '105246.6',
+    rhd_levy_rev: '1543947.00',
+    secondary_storage_rev: '728841.00',
+    breakdown_restack_rev: '328784.00',
+    consol_direct_cost: '1084673.09',
+    groupage_direct_cost: '894707.20',
+    stock_direct_cost: '2785885.01',
+    stock_transfer_cost: '294569.65',
+    total_indirect_fs_ewt: '905482.14',
+    total_central_transport_cost: '432853',
+    ewt_indirect_cost: '687001',
+    df_rhd_direct_cost: '644259',
+    df_rhd_indirect_cost: '175299',
+    df_rhd_central_cost: '385737',
+    df_secondary_direct_cost: '82787',
+    df_secondary_indirect_cost: '421661',
+    df_secondary_central_cost: '82658',
+    df_breakdown_direct_cost: '235051',
+    df_breakdown_indirect_cost: '137395',
+    df_breakdown_central_cost: '82658',
+    pw_rhd_direct_cost: '526388',
+    pw_rhd_indirect_cost: '253502',
+    pw_rhd_central_cost: '196357',
+    pw_secondary_direct_cost: '62784',
+    pw_secondary_indirect_cost: '562439',
+    pw_secondary_central_cost: '42076',
+    pw_breakdown_direct_cost: '64297',
+    pw_breakdown_indirect_cost: '181478',
+    pw_breakdown_central_cost: '42076',
+    exp_rev: '1441512',
+    exp_direct_cost: '1193727',
+    exp_indirect_cost: '168575',
+    qc_rev: '163390',
+    qc_direct_cost: '115400',
+    qc_indirect_cost: '40644',
+    qc_central_cost: '37658',
+});
 
 const Q1_REQUIRED_FIELDS: FieldKey[] = Array.from(
     new Set(SECTION_DEFS.flatMap((section) => section.fields)),
@@ -1185,17 +1239,17 @@ function App() {
     const [activeTab, setActiveTab] = useState('q1');
     const [inputs, setInputs] = useState<Inputs>(() => {
         if (typeof window === 'undefined') {
-            return DEFAULT_INPUTS;
+            return SEEDED_DEFAULT_INPUTS;
         }
         const stored = window.localStorage.getItem(STORAGE_KEY);
         if (!stored) {
-            return DEFAULT_INPUTS;
+            return SEEDED_DEFAULT_INPUTS;
         }
         try {
             const parsed = JSON.parse(stored) as Partial<Inputs>;
-            return { ...DEFAULT_INPUTS, ...parsed };
+            return normaliseInputs(parsed);
         } catch {
-            return DEFAULT_INPUTS;
+            return SEEDED_DEFAULT_INPUTS;
         }
     });
 
@@ -1328,7 +1382,7 @@ function App() {
     };
 
     const handleReset = () => {
-        setInputs(DEFAULT_INPUTS);
+        setInputs(SEEDED_DEFAULT_INPUTS);
         setResults(null);
         setError(null);
         setLastCalculatedAt(null);
@@ -1399,6 +1453,10 @@ function App() {
                                 The model allocates revenue and costs to each
                                 work type, then compares margin per pallet and
                                 total margin.
+                            </p>
+                            <p className="muted">
+                                Default input figures represent the financial
+                                year up to Period 10.
                             </p>
                         </div>
                         <div className="question-method">
