@@ -1412,8 +1412,12 @@ function App() {
                         and the full set of editable inputs.
                     </p>
                     <p className="subhead">
-                        Question 1 is active. Questions 2–9 are ready for your
-                        next models.
+                        Questions 1–3 are active. Questions 4–9 are ready for
+                        your next models.
+                    </p>
+                    <p className="subhead">
+                        Default input figures represent the financial year up to
+                        Period 10.
                     </p>
                 </div>
                 <div className="hero-card">
@@ -1453,10 +1457,6 @@ function App() {
                                 The model allocates revenue and costs to each
                                 work type, then compares margin per pallet and
                                 total margin.
-                            </p>
-                            <p className="muted">
-                                Default input figures represent the financial
-                                year up to Period 10.
                             </p>
                         </div>
                         <div className="question-method">
