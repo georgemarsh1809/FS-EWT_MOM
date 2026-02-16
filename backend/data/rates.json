@@ -1,25 +1,25 @@
 {
-  "p1_p9_avg": {
-    "label": "P1–P9 average",
-    "types": {
-      "consolidation": {
-        "wh_rev_per_in_pallet": 7.47,
-        "wh_cost_per_in_pallet": 6.33,
-        "trans_rev_per_out_pallet": 37.07,
-        "trans_cost_per_out_pallet": 32.33
-      },
-      "groupage": {
-        "wh_rev_per_in_pallet": 7.47,
-        "wh_cost_per_in_pallet": 6.34,
-        "trans_rev_per_out_pallet": 25.88,
-        "trans_cost_per_out_pallet": 17.52
-      },
-      "stock": {
-        "wh_rev_per_in_pallet": 16.84,
-        "wh_cost_per_in_pallet": 16.34,
-        "trans_rev_per_out_pallet": 48.35,
-        "trans_cost_per_out_pallet": 26.19
-      }
+    "p1_p9_avg": {
+        "label": "P1–P10 average",
+        "types": {
+            "consolidation": {
+                "wh_rev_per_in_pallet": 7.48,
+                "wh_cost_per_in_pallet": 10.5,
+                "trans_rev_per_out_pallet": 30.84,
+                "trans_cost_per_out_pallet": 21.35
+            },
+            "groupage": {
+                "wh_rev_per_in_pallet": 7.48,
+                "wh_cost_per_in_pallet": 10.57,
+                "trans_rev_per_out_pallet": 27.08,
+                "trans_cost_per_out_pallet": 17.83
+            },
+            "stock": {
+                "wh_rev_per_in_pallet": 16.9,
+                "wh_cost_per_in_pallet": 28.37,
+                "trans_rev_per_out_pallet": 49.02,
+                "trans_cost_per_out_pallet": 26.47
+            }
+        }
     }
-  }
 }

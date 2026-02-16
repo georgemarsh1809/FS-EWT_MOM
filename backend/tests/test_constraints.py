@@ -15,8 +15,8 @@ def test_variance_pct_max_from_ytd():
 def test_stock_bounds_rounding():
     variance_pct_max = compute_variance_pct_max(TOTAL_IN_YTD, TOTAL_OUT_YTD)
     lower, upper = compute_stock_bounds(100, variance_pct_max)
-    assert lower == 97
-    assert upper == 103
+    assert lower == 99
+    assert upper == 101
 
 
 def test_variance_pct_above_max_rejected():

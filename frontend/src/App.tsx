@@ -281,7 +281,6 @@ const SECTION_DEFS: Array<{
             'consol_pallet_out',
             'groupage_pallet_out',
             'stock_pallet_out',
-            'total_central_transport_cost',
         ],
     },
     {
