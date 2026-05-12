@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for fs-ewt-matrix on 2026-02-16T15:30:42Z
+# fly.toml app configuration file generated for fs-3d-matrix on 2026-05-12T11:08:50+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'fs-ewt-matrix'
+app = 'fs-3d-matrix'
 primary_region = 'lhr'
 
 [build]
