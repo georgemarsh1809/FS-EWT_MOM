@@ -1243,7 +1243,12 @@ function App() {
     }
 
     // Loading gate: show loading if defaults not ready
-    if (!defaults.p12 || Object.keys(defaults.p12).length === 0 || !defaults.p10 || Object.keys(defaults.p10).length === 0) {
+    if (
+        !defaults.p12 ||
+        Object.keys(defaults.p12).length === 0 ||
+        !defaults.p10 ||
+        Object.keys(defaults.p10).length === 0
+    ) {
         return (
             <div className="page">
                 <header
@@ -1264,16 +1269,19 @@ function App() {
     }
 
     // Defaults are loaded, render MainApp with them as props
-    return <MainApp defaults={defaults.p12} />;
+    return <MainApp defaults={{ p10: defaults.p10!, p12: defaults.p12! }} />;
 }
 
 type MainAppProps = {
-    defaults: DefaultsData;
+    defaults: { p10: DefaultsData; p12: DefaultsData };
 };
 
-function MainApp({ defaults: defaultsData }: MainAppProps) {
+function MainApp({ defaults }: MainAppProps) {
     // Build presets from the loaded defaults (guaranteed to be valid here)
-    const DEFAULT_INPUT_PRESETS = buildDefaultInputPresets(null, defaultsData);
+    const DEFAULT_INPUT_PRESETS = buildDefaultInputPresets(
+        defaults.p10,
+        defaults.p12,
+    );
     const SEEDED_DEFAULT_INPUTS = DEFAULT_INPUT_PRESETS.p12;
 
     const [activeTab, setActiveTab] = useState('q1');
