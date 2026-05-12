@@ -1224,13 +1224,18 @@ function App() {
 
     // Load defaults on mount
     useEffect(() => {
-        if (token && !defaults.p12) {
+        if (token && (!defaults.p12 || !defaults.p10)) {
             const { loadDefaults } = useDefaultsStore.getState();
-            loadDefaults('p12').catch(() => {
-                // Error handled by store
-            });
+            Promise.all([
+                loadDefaults('p12').catch(() => {
+                    // Error handled by store
+                }),
+                loadDefaults('p10').catch(() => {
+                    // Error handled by store
+                }),
+            ]);
         }
-    }, [token, defaults.p12]);
+    }, [token, defaults.p12, defaults.p10]);
 
     // Auth gate: show login if no token
     if (!token) {
@@ -1238,7 +1243,7 @@ function App() {
     }
 
     // Loading gate: show loading if defaults not ready
-    if (!defaults.p12 || Object.keys(defaults.p12).length === 0) {
+    if (!defaults.p12 || Object.keys(defaults.p12).length === 0 || !defaults.p10 || Object.keys(defaults.p10).length === 0) {
         return (
             <div className="page">
                 <header
