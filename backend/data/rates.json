@@ -1,0 +1,25 @@
+{
+    "p1_p9_avg": {
+        "label": "P1–P10 average",
+        "types": {
+            "consolidation": {
+                "wh_rev_per_in_pallet": 7.48,
+                "wh_cost_per_in_pallet": 10.5,
+                "trans_rev_per_out_pallet": 30.84,
+                "trans_cost_per_out_pallet": 21.35
+            },
+            "groupage": {
+                "wh_rev_per_in_pallet": 7.48,
+                "wh_cost_per_in_pallet": 10.57,
+                "trans_rev_per_out_pallet": 27.08,
+                "trans_cost_per_out_pallet": 17.83
+            },
+            "stock": {
+                "wh_rev_per_in_pallet": 16.9,
+                "wh_cost_per_in_pallet": 28.37,
+                "trans_rev_per_out_pallet": 49.02,
+                "trans_cost_per_out_pallet": 26.47
+            }
+        }
+    }
+}
