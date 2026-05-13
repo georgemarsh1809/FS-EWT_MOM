@@ -3531,50 +3531,6 @@ function MainApp({ defaults }: MainAppProps) {
                             </p>
                         </div>
 
-                        <div className="totals-grid">
-                            <div className="metric">
-                                <span>Total revenue</span>
-                                <strong>
-                                    {q2Results
-                                        ? formatCurrency(
-                                              q2Results.totals.revenue,
-                                          )
-                                        : '—'}
-                                </strong>
-                            </div>
-                            <div className="metric">
-                                <span>Total cost</span>
-                                <strong>
-                                    {q2Results
-                                        ? formatCurrency(
-                                              q2Results.totals.totalCost,
-                                          )
-                                        : '—'}
-                                </strong>
-                            </div>
-                            <div className="metric">
-                                <span>Total margin</span>
-                                <strong>
-                                    {q2Results
-                                        ? formatCurrency(
-                                              q2Results.totals.marginValue,
-                                          )
-                                        : '—'}
-                                </strong>
-                            </div>
-                            <div className="metric">
-                                <span>Overall margin %</span>
-                                <strong>
-                                    {q2Results
-                                        ? renderValue(
-                                              q2Results.totals.marginPct,
-                                              formatPercent,
-                                          )
-                                        : '—'}
-                                </strong>
-                            </div>
-                        </div>
-
                         <div className="table-wrap">
                             <table>
                                 <thead>
@@ -3739,22 +3695,6 @@ function MainApp({ defaults }: MainAppProps) {
                                     </p>
                                 </div>
                                 <div className="totals-grid">
-                                    <div className="metric">
-                                        <span>Total revenue</span>
-                                        <strong>
-                                            {formatCurrency(
-                                                q3Results.totals.revenue,
-                                            )}
-                                        </strong>
-                                    </div>
-                                    <div className="metric">
-                                        <span>Total cost</span>
-                                        <strong>
-                                            {formatCurrency(
-                                                q3Results.totals.totalCost,
-                                            )}
-                                        </strong>
-                                    </div>
                                     <div className="metric">
                                         <span>Streams analysed</span>
                                         <strong>
